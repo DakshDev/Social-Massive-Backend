@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// =====================================
+enum UserGender {
+  male
+  female
+  other
+}
+// =====================================
+
+
+model User {
+  id Int @id @default(autoincrement())
+  name String
+  username String @unique
+  email String @unique
+  password String
+  birth DateTime
+  gender UserGender @default(other)
+  // Relations
+  saved SavedPost[]
+  posts Post[]
+  followers Follower[] @relation("followers")
+  following Follower[] @relation("following")
+}
+
+model Post {
+  id Int @id @default(autoincrement())
+  url String
+  caption String?
+  like Int @default(0)
+  save Int @default(0)
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SavedPost {
+  id Int @id @default(autoincrement())
+  url String
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+}
+
+
+model Follower {
+  following User @relation("followers", fields: [followingId], references: [id])
+  follower User @relation("following", fields: [followerId], references: [id])
+
+  followingId Int
+  followerId Int
+  
+  @@id([followerId, followingId])
+}
