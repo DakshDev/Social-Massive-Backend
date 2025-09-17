@@ -5,6 +5,6 @@ const router = Router();
 
 router.post("/create", createAccount);
 router.post("/login", loginAccount);
-router.post("/compare-username", isAlreadyExistUsername);
+router.post("/:username", isAlreadyExistUsername);
 
 export { router as accountRoute };

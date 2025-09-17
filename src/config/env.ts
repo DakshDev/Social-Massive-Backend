@@ -1,6 +1,6 @@
 const _envObj = {
   port: process.env.PORT,
-  jwtSecrate: process.env.JWT_SECRATE as string,
+  jwtSecret: process.env.JWT_SECRET as string,
   NODE_ENV: process.env.NODE_ENV as "production" | "development",
 };
 

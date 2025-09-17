@@ -3,6 +3,8 @@ enum ErrorType {
   InvalidCreation = "Invalid Creation",
   InvalidCredential = "Invalid Credential", // for email and password
   InvalidUsername = "Invalid Username",
+  TokenRequired = "Token Required",
+  InvalidToken = "Invalid Token",
   ServerError = "Internal Server Error",
 }
 

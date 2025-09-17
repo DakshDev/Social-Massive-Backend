@@ -17,7 +17,7 @@ interface UserInterface {
 // Check Username Already Exist
 async function isAlreadyExistUsername(req: Request, res: Response) {
   try {
-    const { username } = req.body;
+    const { username } = req.params;
     if (!username) throw new Error(ErrorType.DataRequired);
     const user = await prisma.user.findUnique({
       where: { username },
@@ -32,9 +32,6 @@ async function isAlreadyExistUsername(req: Request, res: Response) {
       const { message } = error;
       switch (message) {
         case ErrorType.DataRequired:
-          res.status(400).send(message);
-          break;
-        case ErrorType.InvalidUsername:
           res.status(400).send(message);
           break;
         default:
@@ -81,7 +78,7 @@ async function createAccount(req: Request, res: Response) {
       return { ...user, password: null };
     });
 
-    const token = jwt.sign({ username: result.username, email: result.email }, _env.jwtSecrate);
+    const token = jwt.sign({ username: result.username }, _env.jwtSecret);
     return res
       .cookie("token", token, {
         httpOnly: true,
@@ -123,7 +120,7 @@ async function loginAccount(req: Request, res: Response) {
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) throw new Error(ErrorType.InvalidCredential);
 
-    const token = jwt.sign({ username: user.username, email: user.email }, _env.jwtSecrate);
+    const token = jwt.sign({ username: user.username }, _env.jwtSecret);
     return res
       .cookie("token", token, {
         httpOnly: true,
