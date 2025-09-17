@@ -1,8 +1,9 @@
 enum ErrorType {
-  DataRequired = "Data Required", // when user pass empty data
-  InvalidCreation = "Invalid Creation",
+  AlreadyExist = "Already Exist",
+  DataRequired = "Data Required", // when user passed empty data
   InvalidCredential = "Invalid Credential", // for email and password
   InvalidUsername = "Invalid Username",
+  InvalidEmail = "Invalid Email",
   TokenRequired = "Token Required",
   InvalidToken = "Invalid Token",
   ServerError = "Internal Server Error",

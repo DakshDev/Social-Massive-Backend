@@ -1,31 +1,24 @@
 import { type Response, type Request } from "express";
-import prisma from "../lib/prisma.js";
+import db from "../lib/db.js";
 import bcrypt from "bcrypt";
 import ErrorType from "../types/error.js";
 import jwt from "jsonwebtoken";
 import _env from "../config/env.js";
-
-interface UserInterface {
-  name: string;
-  username: string;
-  email: string;
-  password: string;
-  birth: Date;
-  gender: "male" | "female" | "other";
-}
+import type { UserCreateType } from "../types/user.js";
+import filterUser from "../utils/filter_user.js";
 
 // Check Username Already Exist
 async function isAlreadyExistUsername(req: Request, res: Response) {
   try {
     const { username } = req.params;
     if (!username) throw new Error(ErrorType.DataRequired);
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { username },
     });
     if (user) {
-      return res.status(200).json({ exists: true });
+      return res.status(400).json({ valid: false });
     } else {
-      return res.status(404).json({ exists: false });
+      return res.status(200).json({ valid: true });
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -45,20 +38,17 @@ async function isAlreadyExistUsername(req: Request, res: Response) {
 // Create Account
 async function createAccount(req: Request, res: Response) {
   try {
-    const { name, username, email, gender, birth, password } = req.body as UserInterface;
-    if (!name || !username || !email || !birth || !password) {
+    const { name, username, email, password } = req.body as UserCreateType;
+    if (!name || !username || !email || !password) {
       throw new Error(ErrorType.DataRequired);
     }
 
-    // Valid Birth
-    const birthDate = new Date(birth);
-    if (isNaN(birthDate.getTime())) throw new Error(ErrorType.InvalidCreation);
-
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       // Check User is Exist
       const isEmailTaken = await tx.user.findUnique({ where: { email } });
       const isUsernameTaken = await tx.user.findUnique({ where: { username } });
-      if (isEmailTaken || isUsernameTaken) throw new Error(ErrorType.InvalidCreation);
+      if (isEmailTaken) throw new Error(ErrorType.InvalidEmail);
+      if (isUsernameTaken) throw new Error(ErrorType.InvalidUsername);
 
       // Hashing the Password
       const hash_password = await bcrypt.hash(password, 12);
@@ -70,12 +60,10 @@ async function createAccount(req: Request, res: Response) {
           email,
           password: hash_password,
           username,
-          birth: birthDate,
-          gender,
         },
       });
 
-      return { ...user, password: null };
+      return user;
     });
 
     const token = jwt.sign({ username: result.username }, _env.jwtSecret);
@@ -86,8 +74,8 @@ async function createAccount(req: Request, res: Response) {
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
-      .status(200)
-      .send({ user: "result" });
+      .status(201)
+      .send({ user: filterUser(result) });
   } catch (error: unknown) {
     if (error instanceof Error) {
       const { message } = error;
@@ -95,7 +83,10 @@ async function createAccount(req: Request, res: Response) {
         case ErrorType.DataRequired:
           res.status(400).send(message);
           break;
-        case ErrorType.InvalidCreation:
+        case ErrorType.InvalidEmail:
+          res.status(400).send(message);
+          break;
+        case ErrorType.InvalidUsername:
           res.status(400).send(message);
           break;
         default:
@@ -109,11 +100,11 @@ async function createAccount(req: Request, res: Response) {
 // Login Account
 async function loginAccount(req: Request, res: Response) {
   try {
-    const { email, password } = req.body as UserInterface;
+    const { email, password } = req.body;
     if (!email || !password) throw new Error(ErrorType.DataRequired);
 
     // Find Use
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await db.user.findUnique({ where: { email } });
     if (!user) throw new Error(ErrorType.InvalidCredential);
 
     // Verify password
@@ -129,7 +120,7 @@ async function loginAccount(req: Request, res: Response) {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(200)
-      .send({ user: "result" });
+      .send({ user: filterUser(user) });
   } catch (error: unknown) {
     if (error instanceof Error) {
       const { message } = error;

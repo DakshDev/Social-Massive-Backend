@@ -1,4 +1,4 @@
-import prisma from "../lib/prisma.js";
+import db from "../lib/db.js";
 import { type NextFunction, type Request, type Response } from "express";
 import _env from "../config/env.js";
 import ErrorType from "../types/error.js";
@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 async function authentication(req: Request, res: Response, next: NextFunction) {
   try {
     if (_env.NODE_ENV === "development") {
-      const user = await prisma.user.findFirst({
+      const user = await db.user.findFirst({
         include: { followers: true, following: true, posts: true, saved: true },
       });
       if (!user) {
@@ -28,7 +28,7 @@ async function authentication(req: Request, res: Response, next: NextFunction) {
       if (!tokenData.username) throw new Error(ErrorType.InvalidToken);
 
       // Find User
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { username: tokenData.username },
         include: { followers: true, following: true, posts: true, saved: true },
       });
