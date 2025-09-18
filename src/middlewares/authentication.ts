@@ -8,7 +8,7 @@ async function authentication(req: Request, res: Response, next: NextFunction) {
   try {
     if (_env.NODE_ENV === "development") {
       const user = await db.user.findFirst({
-        include: { followers: true, following: true, posts: true, saved: true },
+        include: { posts: true, saved: true },
       });
       if (!user) {
         return res.send(404).send("User Not Found: Authentication in Development Mode");
@@ -30,7 +30,7 @@ async function authentication(req: Request, res: Response, next: NextFunction) {
       // Find User
       const user = await db.user.findUnique({
         where: { username: tokenData.username },
-        include: { followers: true, following: true, posts: true, saved: true },
+        include: { posts: true, saved: true },
       });
       if (!user) throw new Error(ErrorType.InvalidCredential);
       req._user = user;
