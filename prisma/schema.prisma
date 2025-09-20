@@ -24,7 +24,7 @@ model User {
   email String @unique
   password String
   birth DateTime
-  profile String?
+  avatar String?
   bio String?
   website String?
   gender UserGender?

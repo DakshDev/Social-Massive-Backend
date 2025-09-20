@@ -17,7 +17,7 @@ export type EditUserType = {
   name?: string;
   bio?: string;
   website?: string;
-  profile?: string;
+  avatar?: string;
   gender?: UserGender;
 };
 

@@ -4,7 +4,7 @@ import type { DetailedUserType } from "../src/types/user.ts";
 declare global {
   namespace Express {
     interface Request {
-      _user?: any;
+      _user: { username: string | "" };
     }
   }
 }

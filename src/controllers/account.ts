@@ -10,7 +10,7 @@ import filterUser from "../utils/filter_user.js";
 // Check Username Already Exist
 async function isAlreadyExistUsername(req: Request, res: Response) {
   try {
-    const { username } = req.params;
+    const { username } = req.params || {};
     if (!username) return res.status(400).send(ErrorType.DataRequired);
     const user = await db.user.findUnique({
       where: { username },
@@ -29,7 +29,7 @@ async function isAlreadyExistUsername(req: Request, res: Response) {
 // Create Account
 async function createAccount(req: Request, res: Response) {
   try {
-    const { name, username, email, password, birth } = req.body as UserType;
+    const { name, username, email, password, birth } = (req.body as UserType) || {};
     if (!name || !username || !email || !password || !birth) {
       return res.status(400).send(ErrorType.DataRequired);
     }
@@ -96,7 +96,8 @@ async function createAccount(req: Request, res: Response) {
 // Login Account
 async function loginAccount(req: Request, res: Response) {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
+    console.log(req.body);
     if (!email || !password) return res.status(400).send(ErrorType.DataRequired);
 
     // Find Use
