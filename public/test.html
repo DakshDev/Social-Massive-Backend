@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Fetch Forms</title>
   </head>
   <body>
     <h1>Create Account</h1>
-    <form action="/api/auth/create" method="post">
+    <form id="createForm">
       <input type="text" name="name" placeholder="Name" />
       <input type="text" name="username" placeholder="Username" />
       <input type="email" name="email" placeholder="Email" />
@@ -15,17 +15,64 @@
       <input type="text" name="password" placeholder="Password" />
       <button type="submit">Submit</button>
     </form>
+
     <h1>Login Account</h1>
-    <form action="/api/auth/login" method="post">
+    <form id="loginForm">
       <input type="email" name="email" placeholder="Email" />
       <input type="text" name="password" placeholder="Password" />
       <button type="submit">Submit</button>
     </form>
+
     <h1>Edit</h1>
-    <form action="/api/user/edit" method="post" enctype="multipart/form-data">
-      <!-- <input type="text" name="name" placeholder="name" /> -->
+    <form id="editForm" enctype="multipart/form-data">
       <input type="file" name="avatar" />
+      <input type="url" name="website" placeholder="website" />
       <button type="submit">Submit</button>
     </form>
+
+    <script>
+      // Helper to handle JSON responses
+      async function handleResponse(response) {
+        const data = await response.json();
+        console.log(data);
+      }
+
+      // CREATE ACCOUNT
+      document.getElementById("createForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = Object.fromEntries(new FormData(form));
+        await fetch("http://localhost:8080/api/auth/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }).then(handleResponse);
+      });
+
+      // LOGIN
+      document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = Object.fromEntries(new FormData(form));
+        await fetch("http://localhost:8080/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }).then(handleResponse);
+      });
+
+      // EDIT (FILE UPLOAD)
+      document.getElementById("editForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form); // Keep as FormData for file
+        await fetch("http://localhost:8080/api/user/edit", {
+          method: "POST",
+          body: formData,
+        })
+          .then(handleResponse)
+          .catch((ERR) => console.log(ERR));
+      });
+    </script>
   </body>
 </html>

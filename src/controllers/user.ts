@@ -39,11 +39,22 @@ async function editUser(req: Request, res: Response) {
         ...data,
       },
     });
-    return res.status(200).send({ user: filterUser(user) });
+    const filtered = await filterUser(user);
+    return res.status(200).send({ user: filtered });
   } catch (error) {
     console.error(error);
     return res.status(500).send(ErrorType.ServerError);
   }
 }
 
-export { editUser };
+async function getUser(req: Request, res: Response) {
+  try {
+    const { username } = req._user;
+    const user = await db.user.findUnique({ where: { username }, include: { posts: true, saved: true } });
+    if (!user) return;
+    const filtered = await filterUser(user);
+    return res.status(200).send({ user: filtered });
+  } catch (error) {}
+}
+
+export { editUser, getUser };

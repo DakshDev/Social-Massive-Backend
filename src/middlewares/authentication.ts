@@ -7,9 +7,7 @@ import jwt from "jsonwebtoken";
 async function authentication(req: Request, res: Response, next: NextFunction) {
   try {
     if (_env.NODE_ENV === "development") {
-      const user = await db.user.findFirst({
-        include: { posts: true, saved: true },
-      });
+      const user = await db.user.findFirst();
       if (!user) return res.send(404).send("User Not Found in Dev Mode");
       req._user = { username: user.username };
       next();
@@ -26,7 +24,6 @@ async function authentication(req: Request, res: Response, next: NextFunction) {
       if (!tokenData.username) return res.status(401).send(ErrorType.InvalidToken);
       const user = await db.user.findUnique({
         where: { username: tokenData.username },
-        include: { posts: true, saved: true },
       });
       if (!user) return res.status(401).send(ErrorType.InvalidCredential);
       req._user = { username: user.username };

@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { editUser } from "../controllers/user.js";
-import uploadLocal from "../utils/upload_local.js";
-import RequestGuard from "../middlewares/request_guard.js";
+import { editUser, getUser } from "../controllers/user.js";
+import uploadLocal from "../utils/uploadLocal.js";
+import manyRequestGuard from "../middlewares/manyRequestGuard.js";
 
 const router = Router();
 
-router.post("/edit", RequestGuard, uploadLocal.single("avatar"), editUser);
+router.post("/edit", manyRequestGuard, uploadLocal.single("avatar"), editUser);
+router.get("/get", manyRequestGuard, getUser);
 
 export { router as userRoute };

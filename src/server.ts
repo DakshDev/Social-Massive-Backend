@@ -18,7 +18,13 @@ if (!_env.port) {
 }
 const PORT = _env.port;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", // allow only this origin
+    methods: ["GET", "POST", "PUT", "DELETE"], // optional
+    credentials: true, // if you need to send cookies/auth headers
+  })
+);
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());

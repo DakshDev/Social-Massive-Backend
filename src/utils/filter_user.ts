@@ -1,4 +1,4 @@
-function filterUser(userObj: any) {
+async function filterUser(userObj: any) {
   const { password, id, ...reset } = userObj;
   return reset;
 }

@@ -2,11 +2,11 @@ import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 
-const uploadPath = path.resolve("uploads");
+const uploadsFolderPath = path.resolve("uploads");
 
 async function ensureUploadPath() {
   try {
-    await fs.mkdir(uploadPath, { recursive: true });
+    await fs.mkdir(uploadsFolderPath, { recursive: true });
   } catch (err) {
     console.error("Error creating upload folder:", err);
     throw err;
@@ -16,7 +16,7 @@ await ensureUploadPath();
 
 const storage = multer.diskStorage({
   destination(req, file, callback) {
-    callback(null, uploadPath);
+    callback(null, uploadsFolderPath);
   },
   filename(req, file, callback) {
     const ext = path.extname(file.originalname);
