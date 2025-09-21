@@ -7,5 +7,6 @@ const router = Router();
 
 router.post("/edit", manyRequestGuard, uploadLocal.single("avatar"), editUser);
 router.get("/get", manyRequestGuard, getUser);
+router.post("/upload/post", manyRequestGuard);
 
 export { router as userRoute };
