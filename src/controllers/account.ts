@@ -124,4 +124,16 @@ async function loginAccount(req: Request, res: Response) {
   }
 }
 
+// Logout
+async function logoutAccount(req: Request, res: Response) {
+  res
+    .clearCookie("token", {
+      httpOnly: true,
+      secure: _env.NODE_ENV === "production",
+      sameSite: "none",
+      path: "/",
+    })
+    .send("Logout");
+}
+
 export { createAccount, loginAccount, usernameChecker };

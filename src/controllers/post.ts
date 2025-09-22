@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import type { PostType } from "../types/user.js";
-import ErrorType from "../types/error.js";
 import db from "../lib/db.js";
 import Busboy from "busboy";
 import { pipeline } from "stream";
@@ -76,7 +75,7 @@ async function uploadPost(req: Request, res: Response) {
         );
 
         pump(file, uploadStream).catch(() => {
-          return res.status(500).send(ErrorType.FileError);
+          return res.status(520).send("File couldn't upload");
         });
       });
     });
@@ -89,7 +88,7 @@ async function uploadPost(req: Request, res: Response) {
     // Finish
     busboy.on("finish", async () => {
       try {
-        if (filePromise) await filePromise.catch((err) => res.status(520).send(ErrorType.FileError));
+        if (filePromise) await filePromise.catch((err) => res.status(520).send("File couldn't upload"));
         await db.post.create({
           data: {
             url: postURL,
@@ -116,4 +115,26 @@ async function uploadPost(req: Request, res: Response) {
   }
 }
 
-export { uploadPost };
+async function editPost(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).send("Params Required");
+    let parseNumber = parseInt(id);
+    if (isNaN(parseNumber)) return res.status(400).send("Invalid Params");
+    const { title, caption } = req.body as PostType;
+    if (!title || !caption) return res.status(400).send("Data Required");
+    const result = await db.post.update({
+      where: { id: parseNumber },
+      data: {
+        caption,
+        title,
+      },
+    });
+    return res.status(200).send({ post: result });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Server Error");
+  }
+}
+
+export { uploadPost, editPost };
