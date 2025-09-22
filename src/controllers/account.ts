@@ -136,4 +136,4 @@ async function logoutAccount(req: Request, res: Response) {
     .send("Logout");
 }
 
-export { createAccount, loginAccount, usernameChecker };
+export { createAccount, loginAccount, usernameChecker, logoutAccount };
