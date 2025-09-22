@@ -23,18 +23,18 @@
       <button type="submit">Submit</button>
     </form>
 
-    <h1>Edit</h1>
-    <form id="editForm" enctype="multipart/form-data">
-      <input type="file" name="avatar" />
-      <input type="url" name="website" placeholder="website" />
+    <h1>Upload Post</h1>
+    <form id="uploadPost" enctype="multipart/form-data">
+      <input type="file" name="post" />
+      <input type="text" name="name" placeholder="name" />
       <button type="submit">Submit</button>
     </form>
 
     <script>
       // Helper to handle JSON responses
       async function handleResponse(response) {
-        const data = await response.json();
-        console.log(data);
+        // const data = await response.json();
+        // console.log(data);
       }
 
       // CREATE ACCOUNT
@@ -62,11 +62,24 @@
       });
 
       // EDIT (FILE UPLOAD)
-      document.getElementById("editForm").addEventListener("submit", async (e) => {
+      document.getElementById("uploadPost").addEventListener("submit", async (e) => {
         e.preventDefault();
         const form = e.target;
+        let fileType = "";
+        let postSize = "portrait";
+        // let x = "square" | "portrait" | "landscape";
         const formData = new FormData(form); // Keep as FormData for file
-        await fetch("http://localhost:8080/api/user/edit", {
+        if (formData.get("post").name) {
+          fileType = formData.get("post").type.split("/")[0];
+        }
+        if (!fileType || !postSize) return null;
+        console.log(typeof fileType, typeof postSize);
+
+        await fetch("http://localhost:8080/api/user/upload/post", {
+          headers: {
+            "post-type": fileType,
+            "post-size": postSize,
+          },
           method: "POST",
           body: formData,
         })

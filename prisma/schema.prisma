@@ -38,6 +38,7 @@ model User {
 model Post {
   id Int @id @default(autoincrement())
   url String
+  title String
   caption String?
   like Int @default(0)
   save Int @default(0)

@@ -21,15 +21,32 @@ async function uploadPost(req: Request, res: Response) {
   try {
     const data = {} as Post;
     const username = req._user.username;
+    const postType = req.header("post-type") as "video" | "image";
+    const postSize = req.header("post-size") as "square" | "portrait" | "landscape";
 
+    if (postType === "image" || postType === "video") {
+      // 1080 x 1080 == square
+      // 1080 x 608 == landscape
+      // 1080 x 1350 == portrait
+      let sizes = ["landscape", "portrait", "square"];
+      const result = sizes.map((each) => {
+        if (postSize.includes(each)) {
+          return true;
+        }
+        return null;
+      });
+      if (!result) return res.status(400).send(ErrorType.InvalidData);
+    } else {
+      return res.status(400).send(ErrorType.InvalidData);
+    }
     const busboy = Busboy({ headers: req.headers });
     let avatarUrl: string | undefined;
     let filePromise: Promise<void> | null = null;
 
     // File handling
     busboy.on("file", async (fieldname, file, info) => {
-      if (fieldname !== "avatar") {
-        file.resume(); // skip unwanted fields
+      if (fieldname !== "post") {
+        file.resume();
         return;
       }
 
@@ -42,9 +59,7 @@ async function uploadPost(req: Request, res: Response) {
           {
             folder: username,
             resource_type: resourceType,
-            public_id: "profile_pic",
-            overwrite: true,
-            transformation: [{ width: 200, height: 200, crop: "fill" }],
+            transformation: [{ width: 1080, height: 1080, crop: "fill" }],
           },
           async (error, result) => {
             if (error) return reject(error);
@@ -67,9 +82,10 @@ async function uploadPost(req: Request, res: Response) {
     // Finish
     busboy.on("finish", async () => {
       try {
-        if (filePromise) await filePromise;
+        if (filePromise)
+          await filePromise.catch((err) => res.status(500).send(ErrorType.FileError));
         console.log("Fields:", data);
-        console.log("Avatar:", avatarUrl);
+        console.log("Post:", avatarUrl);
         return res.end();
       } catch (err) {
         return res.status(500).send(ErrorType.ServerError);
