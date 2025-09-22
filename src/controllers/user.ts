@@ -3,7 +3,8 @@ import type { EditUserType } from "../types/user.js";
 import ErrorType from "../types/error.js";
 import db from "../lib/db.js";
 import filterUser from "../utils/filter_user.js";
-import { uploadImage } from "../utils/cloud_upload.js";
+import cloudinary from "../lib/cloudnary.js";
+import fs from "fs/promises";
 
 async function editUser(req: Request, res: Response) {
   try {
@@ -12,16 +13,23 @@ async function editUser(req: Request, res: Response) {
     const username = req._user?.username;
 
     if (file) {
-      const response = await uploadImage({
-        height: 200,
-        width: 200,
-        localFilePath: file.path,
-        username: username,
-        purpose: "profile pic",
-        tag: "avatar",
-      });
-      if (!response) return res.status(520).send(ErrorType.FileError);
-      data.avatar = response?.secure_url;
+      try {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: username,
+          format: "webp",
+          transformation: { width: 200, height: 200, crop: "fill" },
+          resource_type: "image",
+          public_id: "avatar",
+          overwrite: true,
+          tags: ["avatar", username],
+        });
+
+        data.avatar = result.secure_url;
+      } catch (error) {
+        return res.status(520).send("Avatar Couldn't Upload");
+      } finally {
+        await fs.unlink(file.path);
+      }
     } else {
       if (!data.name && !data.bio && !data.gender && !data.website) return res.status(400).send(ErrorType.DataRequired);
     }
@@ -39,11 +47,11 @@ async function editUser(req: Request, res: Response) {
         ...data,
       },
     });
-    const filtered = await filterUser(user);
+    const filtered = filterUser(user);
     return res.status(200).send({ user: filtered });
   } catch (error) {
-    console.error(error);
-    return res.status(500).send(ErrorType.ServerError);
+    console.error("🔴 Edit User Error", error);
+    return res.status(500).send("Server Error");
   }
 }
 

@@ -10,11 +10,10 @@ enum ErrorType {
   InvalidAge = "User must be at least 16 years old",
   // Files
   FileError = "File couldn't upload",
-  // Token
-  TokenRequired = "Token Required",
-  InvalidToken = "Invalid Token",
-  // Server
-  ServerError = "Internal Server Error",
 }
 
+export enum FileErr {
+  UploadError = "File couldn't upload",
+  InvalidFile = "Invalid File",
+}
 export default ErrorType;

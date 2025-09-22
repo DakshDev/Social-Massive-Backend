@@ -1,6 +1,7 @@
-import multer from "multer";
+import multer, { MulterError } from "multer";
 import path from "path";
 import fs from "fs/promises";
+import type { NextFunction, Request, Response } from "express";
 
 const uploadsFolderPath = path.resolve("uploads");
 
@@ -26,6 +27,21 @@ const storage = multer.diskStorage({
   },
 });
 
-const uploadLocal = multer({ storage });
+const uploadLocal = multer({ storage, limits: { fileSize: 1 * 1024 * 1024, files: 1 } });
 
-export default uploadLocal;
+async function multerFileUploadLocal(req: Request, res: Response, next: NextFunction) {
+  uploadLocal.single("avatar")(req, res, function (err) {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json("File size must be under 1MB");
+      }
+      if (err instanceof MulterError) {
+        return res.status(400).json(err.message);
+      }
+      throw new Error(err);
+    }
+    next();
+  });
+}
+
+export default multerFileUploadLocal;

@@ -7,8 +7,8 @@ import _env from "../config/env.js";
 import type { UserType } from "../types/user.js";
 import filterUser from "../utils/filter_user.js";
 
-// Check Username Already Exist
-async function isAlreadyExistUsername(req: Request, res: Response) {
+// Username Checker
+async function usernameChecker(req: Request, res: Response) {
   try {
     const { username } = req.params || {};
     if (!username) return res.status(400).send(ErrorType.DataRequired);
@@ -21,8 +21,8 @@ async function isAlreadyExistUsername(req: Request, res: Response) {
       return res.status(200).send();
     }
   } catch (error: unknown) {
-    console.error(error);
-    return res.status(500).send(ErrorType.ServerError);
+    console.error("🔴 Username Checker Error", error);
+    return res.status(500).send("Server Error");
   }
 }
 
@@ -88,8 +88,8 @@ async function createAccount(req: Request, res: Response) {
           return res.status(400).send(message);
       }
     }
-    console.error(error);
-    return res.status(500).send(ErrorType.ServerError);
+    console.error("🔴 Create Account Error", error);
+    return res.status(500).send("Server Error");
   }
 }
 
@@ -119,9 +119,9 @@ async function loginAccount(req: Request, res: Response) {
       .status(200)
       .send({ user: filterUser(user) });
   } catch (error: unknown) {
-    console.error(error);
-    return res.status(500).send(ErrorType.ServerError);
+    console.error("🔴 Account Login Error", error);
+    return res.status(500).send("Server Error");
   }
 }
 
-export { createAccount, loginAccount, isAlreadyExistUsername };
+export { createAccount, loginAccount, usernameChecker };

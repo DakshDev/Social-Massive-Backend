@@ -24,15 +24,13 @@ export type EditUserType = {
 export type fullUserType = UserType & EditUserType;
 
 // Post type
-export type Post = {
+export type PostType = {
+  title?: string;
   url: string;
   userId: number;
-  id?: number;
   caption?: string;
   like?: number;
   save?: number;
-  createdAt?: Date;
-  updatedAt?: Date;
 };
 
 // SavedPost type

@@ -1,46 +1,49 @@
 import type { Request, Response } from "express";
-import type { Post } from "../types/user.js";
+import type { PostType } from "../types/user.js";
 import ErrorType from "../types/error.js";
 import db from "../lib/db.js";
-import filterUser from "../utils/filter_user.js";
-import { v2 as cloudinary } from "cloudinary";
 import Busboy from "busboy";
 import { pipeline } from "stream";
 import { promisify } from "util";
 import _env from "../config/env.js";
-
-cloudinary.config({
-  cloud_name: _env.cloud_name,
-  api_key: _env.cloud_api_key,
-  api_secret: _env.cloud_api_secret,
-});
+import cloudinary from "../lib/cloudnary.js";
 
 const pump = promisify(pipeline);
 
 async function uploadPost(req: Request, res: Response) {
   try {
-    const data = {} as Post;
+    const data = {} as PostType;
     const username = req._user.username;
-    const postType = req.header("post-type") as "video" | "image";
     const postSize = req.header("post-size") as "square" | "portrait" | "landscape";
+    if (!postSize) return res.status(400).send("Size not Assign in Header");
+    let actualSize = { w: 0, h: 0 };
 
-    if (postType === "image" || postType === "video") {
-      // 1080 x 1080 == square
-      // 1080 x 608 == landscape
-      // 1080 x 1350 == portrait
-      let sizes = ["landscape", "portrait", "square"];
-      const result = sizes.map((each) => {
-        if (postSize.includes(each)) {
-          return true;
-        }
-        return null;
-      });
-      if (!result) return res.status(400).send(ErrorType.InvalidData);
-    } else {
-      return res.status(400).send(ErrorType.InvalidData);
+    let validSize = false;
+    for (let i = 0; i < 3; i++) {
+      if (postSize == "square") {
+        actualSize.h = 1080;
+        actualSize.w = 1080;
+        validSize = true;
+        break;
+      }
+      if (postSize == "portrait") {
+        actualSize.h = 1350;
+        actualSize.w = 1080;
+        validSize = true;
+        break;
+      }
+      if (postSize == "landscape") {
+        actualSize.h = 608;
+        actualSize.w = 1080;
+        validSize = true;
+        break;
+      }
     }
+    if (!validSize) return res.status(400).send("Invalid Post Size in Header");
+
     const busboy = Busboy({ headers: req.headers });
-    let avatarUrl: string | undefined;
+    let postURL: string;
+    let postID: string;
     let filePromise: Promise<void> | null = null;
 
     // File handling
@@ -59,11 +62,15 @@ async function uploadPost(req: Request, res: Response) {
           {
             folder: username,
             resource_type: resourceType,
-            transformation: [{ width: 1080, height: 1080, crop: "fill" }],
+            use_filename: false,
+            unique_filename: true,
+            transformation: [{ width: actualSize.w, height: actualSize.h, crop: "fill" }],
           },
           async (error, result) => {
             if (error) return reject(error);
-            avatarUrl = result?.secure_url;
+            if (!result) return reject();
+            postURL = result.secure_url;
+            postID = result.public_id;
             resolve();
           }
         );
@@ -75,27 +82,37 @@ async function uploadPost(req: Request, res: Response) {
     });
 
     // Handle text fields
-    busboy.on("field", (name, value) => {
+    busboy.on("field", (name, value, info) => {
       (data as any)[name] = value;
     });
 
     // Finish
     busboy.on("finish", async () => {
       try {
-        if (filePromise)
-          await filePromise.catch((err) => res.status(500).send(ErrorType.FileError));
-        console.log("Fields:", data);
-        console.log("Post:", avatarUrl);
+        if (filePromise) await filePromise.catch((err) => res.status(520).send(ErrorType.FileError));
+        await db.post.create({
+          data: {
+            url: postURL,
+            public: postID,
+            title: data.title ?? null,
+            caption: data.caption ?? null,
+            userId: req._user.id,
+          },
+        });
         return res.end();
       } catch (err) {
-        return res.status(500).send(ErrorType.ServerError);
+        return res.status(500).send("Server Error");
       }
     });
 
     req.pipe(busboy);
   } catch (error) {
+    if (error instanceof Error) {
+      const { message } = error;
+      return res.status(400).send(message);
+    }
     console.error(error);
-    return res.status(500).send(ErrorType.ServerError);
+    return res.status(500).send("Server Error");
   }
 }
 
