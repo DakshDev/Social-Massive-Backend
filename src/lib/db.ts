@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 const db = new PrismaClient();
 
+// Ab User type wahi hai jo schema me define hai
+
 (async function () {
   try {
     await db.$queryRaw`SELECT 1`;

@@ -26,18 +26,18 @@ async function editUser(req: Request, res: Response) {
 
         data.avatar = result.secure_url;
       } catch (error) {
-        return res.status(520).send("Avatar Couldn't Upload");
+        return res.status(520).json({ error: "Avatar Couldn't Upload" });
       } finally {
         await fs.unlink(file.path);
       }
     } else {
-      if (!data.name && !data.bio && !data.gender && !data.website) return res.status(400).send(ErrorType.DataRequired);
+      if (!data.name && !data.bio && !data.gender && !data.website) return res.status(400).json({ error: ErrorType.FieldsRequired });
     }
     // ✅ check extra fields
     const allowedKeys = ["name", "bio", "gender", "website", "avatar"];
     const bodyKeys = Object.keys(data);
     const isValid = bodyKeys.every((key) => allowedKeys.includes(key));
-    if (!isValid) return res.status(400).send(ErrorType.InvalidData);
+    if (!isValid) return res.status(400).json({ error: ErrorType.InvalidData });
 
     const user = await db.user.update({
       where: {
@@ -47,22 +47,12 @@ async function editUser(req: Request, res: Response) {
         ...data,
       },
     });
-    const filtered = filterUser(user);
-    return res.status(200).send({ user: filtered });
+    const filter_user = await filterUser(user);
+    return res.status(200).json({ user: filter_user });
   } catch (error) {
     console.error("🔴 Edit User Error", error);
-    return res.status(500).send("Server Error");
+    return res.status(500).json({ error: "Server Error" });
   }
 }
 
-async function getUser(req: Request, res: Response) {
-  try {
-    const { username } = req._user;
-    const user = await db.user.findUnique({ where: { username }, include: { posts: true, saved: true } });
-    if (!user) return;
-    const filtered = await filterUser(user);
-    return res.status(200).send({ user: filtered });
-  } catch (error) {}
-}
-
-export { editUser, getUser };
+export { editUser };

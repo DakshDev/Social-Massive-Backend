@@ -9,7 +9,7 @@ import authentication from "./middlewares/authentication.js";
 // Routes
 import { accountRoute } from "./routes/account.js";
 import { userRoute } from "./routes/user.js";
-import { publicRoute } from "./routes/public.js";
+import { getUserRoute } from "./routes/get_user.js";
 
 const app = express();
 if (!_env.port) {
@@ -32,7 +32,7 @@ app.use(statusMonitor());
 
 // Routes
 app.use("/api/auth", accountRoute);
-app.use("/api/public", publicRoute);
+app.use("/api/get", getUserRoute);
 app.use("/api/user", authentication, userRoute);
 
 app.listen(PORT, () => console.log(`🟢 Server is running on PORT:${PORT}`));

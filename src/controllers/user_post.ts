@@ -6,6 +6,8 @@ import { pipeline } from "stream";
 import { promisify } from "util";
 import _env from "../config/env.js";
 import cloudinary from "../lib/cloudnary.js";
+import ErrorType from "../types/error.js";
+import { Prisma } from "@prisma/client";
 
 const pump = promisify(pipeline);
 
@@ -14,7 +16,7 @@ async function uploadPost(req: Request, res: Response) {
     const data = {} as PostType;
     const username = req._user.username;
     const postSize = req.header("post-size") as "square" | "portrait" | "landscape";
-    if (!postSize) return res.status(400).send("Size not Assign in Header");
+    if (!postSize) return res.status(400).json({ error: "Size did'nt Assigned in Header" });
     let actualSize = { w: 0, h: 0 };
 
     let validSize = false;
@@ -38,7 +40,7 @@ async function uploadPost(req: Request, res: Response) {
         break;
       }
     }
-    if (!validSize) return res.status(400).send("Invalid Post Size in Header");
+    if (!validSize) return res.status(400).json({ error: "Invalid Post Size in Header" });
 
     const busboy = Busboy({ headers: req.headers });
     let postURL: string;
@@ -75,32 +77,32 @@ async function uploadPost(req: Request, res: Response) {
         );
 
         pump(file, uploadStream).catch(() => {
-          return res.status(520).send("File couldn't upload");
+          return res.status(520).json({ error: "File couldn't upload" });
         });
       });
     });
 
     // Handle text fields
-    busboy.on("field", (name, value, info) => {
+    busboy.on("field", (name, value) => {
       (data as any)[name] = value;
     });
 
     // Finish
     busboy.on("finish", async () => {
       try {
-        if (filePromise) await filePromise.catch((err) => res.status(520).send("File couldn't upload"));
+        if (filePromise) await filePromise.catch((err) => res.status(520).json({ error: "File couldn't upload" }));
         await db.post.create({
           data: {
             url: postURL,
             public: postID,
-            title: data.title ?? null,
+            title: data.title?.toLowerCase() ?? null,
             caption: data.caption ?? null,
             userId: req._user.id,
           },
         });
-        return res.end();
+        return res.status(200).json({ message: "Post Has Been Uploaded" });
       } catch (err) {
-        return res.status(500).send("Server Error");
+        return res.status(500).json({ error: "Server Error" });
       }
     });
 
@@ -108,32 +110,37 @@ async function uploadPost(req: Request, res: Response) {
   } catch (error) {
     if (error instanceof Error) {
       const { message } = error;
-      return res.status(400).send(message);
+      return res.status(400).json({ error: message });
     }
-    console.error(error);
-    return res.status(500).send("Server Error");
+    console.error("🔴 Upload Post Error", error);
+    return res.status(500).json({ error: "Server Error" });
   }
 }
 
 async function editPost(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    if (!id) return res.status(400).send("Params Required");
+    if (!id) return res.status(400).json({ error: "ID Required in API" });
     let parseNumber = parseInt(id);
-    if (isNaN(parseNumber)) return res.status(400).send("Invalid Params");
-    const { title, caption } = req.body as PostType;
-    if (!title || !caption) return res.status(400).send("Data Required");
+    if (isNaN(parseNumber)) return res.status(400).json({ error: "ID should be Number Type" });
+    const { title, caption } = req.body || ({} as PostType);
+    if (!title || !caption) return res.status(400).json({ error: ErrorType.FieldsRequired });
+
     const result = await db.post.update({
       where: { id: parseNumber },
       data: {
         caption,
-        title,
+        title: title.toLowerCase(),
       },
     });
-    return res.status(200).send({ post: result });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send("Server Error");
+
+    return res.status(200).json({ data: result });
+  } catch (error: any) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return res.status(400).json({ error: error.code });
+    }
+    console.error("🔴 Edit Post Error", error);
+    return res.status(500).json({ error: "Server Error" });
   }
 }
 
