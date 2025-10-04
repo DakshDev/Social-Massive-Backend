@@ -3,7 +3,6 @@ import cors from "cors";
 import "dotenv/config";
 import _env from "./config/env.js";
 import cookieParser from "cookie-parser";
-import statusMonitor from "express-status-monitor";
 // Middlewares
 import authentication from "./middlewares/authentication.js";
 // Routes
@@ -28,7 +27,6 @@ app.use(
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
-app.use(statusMonitor());
 
 // Routes
 app.use("/api/auth", accountRoute);
