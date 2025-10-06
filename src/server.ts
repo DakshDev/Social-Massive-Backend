@@ -8,7 +8,6 @@ import authentication from "./middlewares/authentication.js";
 // Routes
 import { accountRoute } from "./routes/account.js";
 import { userRoute } from "./routes/user.js";
-import { getUserRoute } from "./routes/get_user.js";
 
 const app = express();
 if (!_env.port) {
@@ -24,13 +23,12 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.json({ limit: "26kb" }));
+app.use(express.urlencoded({ extended: true, limit: "26kb" }));
 app.use(cookieParser());
 
 // Routes
 app.use("/api/auth", accountRoute);
-app.use("/api/get", getUserRoute);
 app.use("/api/user", authentication, userRoute);
 
 app.listen(PORT, () => console.log(`🟢 Server is running on PORT:${PORT}`));

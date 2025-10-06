@@ -6,7 +6,24 @@ import filterUser from "../utils/filter_user.js";
 import cloudinary from "../lib/cloudnary.js";
 import fs from "fs/promises";
 
-async function editUser(req: Request, res: Response) {
+async function getUserInfo(req: Request, res: Response) {
+  try {
+    const { username } = req.params;
+    if (!username) return res.status(400).json({ error: "Username Required in API" });
+
+    const user = await db.user.findUnique({
+      where: { username: username.toLowerCase() },
+    });
+    if (!user) return res.status(404).json({ error: "user not found" });
+    const filter_user = await filterUser(user);
+    return res.status(200).json({ ...filter_user });
+  } catch (error) {
+    console.error("🔴 Get User Based On Auth", error);
+    return res.status(500).json({ error: "Server Error" });
+  }
+}
+
+async function editUserInfo(req: Request, res: Response) {
   try {
     const data = req.body as EditUserType;
     const file = req.file;
@@ -47,12 +64,11 @@ async function editUser(req: Request, res: Response) {
         ...data,
       },
     });
-    const filter_user = await filterUser(user);
-    return res.status(200).json({ user: filter_user });
+    return res.status(200).json({ message: "Successfully Updated" });
   } catch (error) {
     console.error("🔴 Edit User Error", error);
     return res.status(500).json({ error: "Server Error" });
   }
 }
 
-export { editUser };
+export { editUserInfo, getUserInfo };
