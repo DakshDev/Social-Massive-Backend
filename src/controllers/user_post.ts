@@ -9,14 +9,12 @@ import cloudinary from "../lib/cloudnary.js";
 import ErrorType from "../types/error.js";
 import { Prisma } from "@prisma/client";
 import getPostSize from "../utils/post_sizes.js";
-import fs from "fs/promises";
 
 const pump = promisify(pipeline);
 
 async function uploadPost(req: Request, res: Response) {
   try {
     const data = {} as PostType;
-    const file = req.file;
     const username = req._user.username;
     const postSize = req.header("post-size") as "square" | "portrait" | "landscape";
     if (!postSize) return res.status(400).json({ error: "Size didn't Assigned in Header" });
@@ -25,13 +23,15 @@ async function uploadPost(req: Request, res: Response) {
     }
 
     const actualSize = getPostSize(postSize);
+    if (!actualSize) return res.status(400).json({ error: "size is not define" });
     const busboy = Busboy({ headers: req.headers });
-    let postURL: string;
+    let sourceURI: string;
+    let thumnailURI: string;
     let filePromise: Promise<void> | null = null;
 
     // File handling
-    busboy.on("file", async (fieldname, file, info) => {
-      if (fieldname !== "post") {
+    busboy.on("file", async (fieldname: "post" | "thumnail", file, info) => {
+      if (!(fieldname == "post" || fieldname == "thumnail")) {
         file.resume();
         return;
       }
@@ -52,7 +52,11 @@ async function uploadPost(req: Request, res: Response) {
           async (error, result) => {
             if (error) return reject(error);
             if (!result) return reject();
-            postURL = result.secure_url;
+            if (fieldname == "thumnail") {
+              thumnailURI = result.secure_url;
+            } else if (fieldname == "post") {
+              sourceURI = result.secure_url;
+            }
             resolve();
           }
         );
@@ -70,47 +74,22 @@ async function uploadPost(req: Request, res: Response) {
 
     // Finish
     busboy.on("finish", async () => {
-      try {
-        if (filePromise) await filePromise.catch((err) => res.status(520).json({ error: "File couldn't upload" }));
-        if (file) {
-          try {
-            const result = await cloudinary.uploader.upload(file.path, {
-              folder: username,
-              format: "webp",
-              transformation: { width: 200, height: 200, crop: "fill" },
-              resource_type: "image",
-              public_id: "avatar",
-              overwrite: true,
-              tags: ["thumnail", username],
-            });
-
-            data.thumnailURI = result.secure_url;
-          } catch (error) {
-          } finally {
-            await fs.unlink(file.path);
-          }
-        }
-        await db.post.create({
-          data: {
-            sourceURI: postURL,
-            thumnailURI: data.thumnailURI || null,
-            title: data.title?.toLowerCase() ?? null,
-            caption: data.caption ?? null,
-            userId: req._user.id,
-          },
-        });
-        return res.status(200).json({ message: "Post Has Been Uploaded" });
-      } catch (err) {
-        return res.status(500).json({ error: "Server Error" });
-      }
+      if (filePromise) await filePromise.catch((err) => res.status(520).json({ error: "File couldn't upload" }));
+      await db.post.create({
+        data: {
+          sourceURI: sourceURI,
+          thumnailURI: thumnailURI || null,
+          title: data.title?.toLowerCase() ?? null,
+          caption: data.caption ?? null,
+          userId: req._user.id,
+        },
+      });
+      return res.status(200).json({ message: "Post Has Been Uploaded" });
     });
 
     req.pipe(busboy);
   } catch (error) {
-    if (error instanceof Error) {
-      const { name } = error;
-      return res.status(400).json({ error: name });
-    }
+    if (error instanceof Error) return res.status(400).json({ error: error.message });
     console.error("🔴 Upload Post Error", error);
     return res.status(500).json({ error: "Server Error" });
   }
@@ -143,4 +122,20 @@ async function editPost(req: Request, res: Response) {
   }
 }
 
-export { uploadPost, editPost };
+async function getAllPosts(req: Request, res: Response) {
+  try {
+    const getPosts = await db.post.findMany({
+      where: {
+        userId: req._user.id,
+      },
+    });
+    if (!getPosts) return res.status(404).json({ error: "posts not found" });
+    return res.status(200).json(getPosts);
+  } catch (error) {
+    if (error instanceof Error) return res.status(500).json({ error: error.message });
+    console.error("🔴 Get All Posts", error);
+    return res.status(500).json({ error: "Server Error" });
+  }
+}
+
+export { uploadPost, editPost, getAllPosts };
