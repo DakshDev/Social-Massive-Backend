@@ -25,12 +25,11 @@ export type fullUserType = UserType & EditUserType;
 
 // Post type
 export type PostType = {
-  title?: string;
-  url: string;
+  sourceURI: string;
+  thumnailURI: string;
   userId: number;
+  title?: string;
   caption?: string;
-  like?: number;
-  save?: number;
 };
 
 // SavedPost type

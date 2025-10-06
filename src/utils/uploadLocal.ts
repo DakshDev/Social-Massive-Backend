@@ -27,18 +27,17 @@ const storage = multer.diskStorage({
   },
 });
 
-const uploadLocal = multer({ storage, limits: { fileSize: 1 * 1024 * 1024, files: 1 } });
+const uploadLocal = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024, files: 1 },
+});
 
-async function multerFileUploadLocal(req: Request, res: Response, next: NextFunction) {
-  uploadLocal.single("avatar")(req, res, function (err) {
+async function multerFileUploadLocal(req: Request, res: Response, next: NextFunction, fileName: string) {
+  uploadLocal.single(fileName)(req, res, function (err) {
     if (err) {
-      if (err.code === "LIMIT_FILE_SIZE") {
-        return res.status(400).json("File size must be under 1MB");
-      }
-      if (err instanceof MulterError) {
-        return res.status(400).json(err.message);
-      }
-      throw new Error(err);
+      if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json(`File must be under 2MB`);
+      if (err instanceof MulterError) return res.status(400).json({ error: err.message });
+      return res.status(500).json({ error: "Unknown" });
     }
     next();
   });

@@ -1,8 +1,8 @@
 import { Router } from "express";
-import getUserBasedOnAuth from "../controllers/get_user.js";
+import getUserInfo from "../controllers/get_user.js";
 
 const router = Router();
 
-router.get("/:username", getUserBasedOnAuth);
+router.get("/:username", getUserInfo);
 
 export { router as getUserRoute };

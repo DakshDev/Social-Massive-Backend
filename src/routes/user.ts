@@ -6,8 +6,22 @@ import { editPost, uploadPost } from "../controllers/user_post.js";
 
 const router = Router();
 
-router.put("/edit", manyRequestGuard, multerFileUploadLocal, editUser);
-router.post("/upload/post", manyRequestGuard, uploadPost);
+router.put(
+  "/edit",
+  manyRequestGuard,
+  (req, res, next) => {
+    multerFileUploadLocal(req, res, next, "avatar");
+  },
+  editUser
+);
+router.post(
+  "/upload/post",
+  manyRequestGuard,
+  (req, res, next) => {
+    multerFileUploadLocal(req, res, next, "thumnail");
+  },
+  uploadPost
+);
 router.put("/upload/post/edit/:id", manyRequestGuard, editPost);
 
 export { router as userRoute };

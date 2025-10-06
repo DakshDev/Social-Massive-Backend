@@ -8,43 +8,25 @@ import _env from "../config/env.js";
 import cloudinary from "../lib/cloudnary.js";
 import ErrorType from "../types/error.js";
 import { Prisma } from "@prisma/client";
+import getPostSize from "../utils/post_sizes.js";
+import fs from "fs/promises";
 
 const pump = promisify(pipeline);
 
 async function uploadPost(req: Request, res: Response) {
   try {
     const data = {} as PostType;
+    const file = req.file;
     const username = req._user.username;
     const postSize = req.header("post-size") as "square" | "portrait" | "landscape";
-    if (!postSize) return res.status(400).json({ error: "Size did'nt Assigned in Header" });
-    let actualSize = { w: 0, h: 0 };
-
-    let validSize = false;
-    for (let i = 0; i < 3; i++) {
-      if (postSize == "square") {
-        actualSize.h = 1080;
-        actualSize.w = 1080;
-        validSize = true;
-        break;
-      }
-      if (postSize == "portrait") {
-        actualSize.h = 1350;
-        actualSize.w = 1080;
-        validSize = true;
-        break;
-      }
-      if (postSize == "landscape") {
-        actualSize.h = 608;
-        actualSize.w = 1080;
-        validSize = true;
-        break;
-      }
+    if (!postSize) return res.status(400).json({ error: "Size didn't Assigned in Header" });
+    if (!(postSize == "landscape") && !(postSize == "portrait") && !(postSize == "square")) {
+      return res.status(400).json({ error: `${postSize}: this size is not expected` });
     }
-    if (!validSize) return res.status(400).json({ error: "Invalid Post Size in Header" });
 
+    const actualSize = getPostSize(postSize);
     const busboy = Busboy({ headers: req.headers });
     let postURL: string;
-    let postID: string;
     let filePromise: Promise<void> | null = null;
 
     // File handling
@@ -71,7 +53,6 @@ async function uploadPost(req: Request, res: Response) {
             if (error) return reject(error);
             if (!result) return reject();
             postURL = result.secure_url;
-            postID = result.public_id;
             resolve();
           }
         );
@@ -91,10 +72,28 @@ async function uploadPost(req: Request, res: Response) {
     busboy.on("finish", async () => {
       try {
         if (filePromise) await filePromise.catch((err) => res.status(520).json({ error: "File couldn't upload" }));
+        if (file) {
+          try {
+            const result = await cloudinary.uploader.upload(file.path, {
+              folder: username,
+              format: "webp",
+              transformation: { width: 200, height: 200, crop: "fill" },
+              resource_type: "image",
+              public_id: "avatar",
+              overwrite: true,
+              tags: ["thumnail", username],
+            });
+
+            data.thumnailURI = result.secure_url;
+          } catch (error) {
+          } finally {
+            await fs.unlink(file.path);
+          }
+        }
         await db.post.create({
           data: {
-            url: postURL,
-            public: postID,
+            sourceURI: postURL,
+            thumnailURI: data.thumnailURI || null,
             title: data.title?.toLowerCase() ?? null,
             caption: data.caption ?? null,
             userId: req._user.id,
@@ -109,8 +108,8 @@ async function uploadPost(req: Request, res: Response) {
     req.pipe(busboy);
   } catch (error) {
     if (error instanceof Error) {
-      const { message } = error;
-      return res.status(400).json({ error: message });
+      const { name } = error;
+      return res.status(400).json({ error: name });
     }
     console.error("🔴 Upload Post Error", error);
     return res.status(500).json({ error: "Server Error" });

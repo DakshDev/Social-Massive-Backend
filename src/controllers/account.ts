@@ -5,7 +5,6 @@ import ErrorType from "../types/error.js";
 import jwt from "jsonwebtoken";
 import _env from "../config/env.js";
 import type { UserType } from "../types/user.js";
-import filterUser from "../utils/filter_user.js";
 
 // Username Checker
 async function usernameChecker(req: Request, res: Response) {
@@ -16,9 +15,9 @@ async function usernameChecker(req: Request, res: Response) {
       where: { username: username.toLowerCase() },
     });
     if (user) {
-      return res.status(400).json({ error: "Username Already Exist" });
+      return res.status(400).json({ error: "already exist username" });
     } else {
-      return res.status(200).json({ message: "Valid Username" });
+      return res.status(200).json({ message: "username is valid" });
     }
   } catch (error: unknown) {
     console.error("🔴 Username Checker Error", error);
@@ -69,7 +68,6 @@ async function createAccount(req: Request, res: Response) {
     });
 
     const token = jwt.sign({ username: result.username }, _env.jwtSecret);
-    const filter_user = await filterUser(result);
     return res
       .cookie("token", token, {
         httpOnly: true,
@@ -78,7 +76,7 @@ async function createAccount(req: Request, res: Response) {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(201)
-      .json({ data: filter_user });
+      .json({ message: "Account Created successfully" });
   } catch (error: unknown) {
     if (error instanceof Error) {
       const { message } = error;
@@ -101,7 +99,7 @@ async function loginAccount(req: Request, res: Response) {
     if (!email || !password) return res.status(400).json({ error: ErrorType.FieldsRequired });
 
     // Find Use
-    const user = await db.user.findUnique({ where: { email: email.toLowerCase() }, include: { posts: true, saved: true } });
+    const user = await db.user.findUnique({ where: { email: email.toLowerCase() } });
     if (!user) return res.status(404).json({ error: ErrorType.UserNotFound });
 
     // Verify password
@@ -109,7 +107,6 @@ async function loginAccount(req: Request, res: Response) {
     if (!isValid) return res.status(400).json({ error: ErrorType.InvalidCredential });
 
     const token = jwt.sign({ username: user.username }, _env.jwtSecret);
-    const filter_user = await filterUser(user);
     return res
       .cookie("token", token, {
         httpOnly: true,
@@ -118,7 +115,7 @@ async function loginAccount(req: Request, res: Response) {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(200)
-      .json({ data: filter_user });
+      .json({ message: "Account Login successfully" });
   } catch (error: unknown) {
     console.error("🔴 Account Login Error", error);
     return res.status(500).json({ error: "Server Error" });

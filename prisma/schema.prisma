@@ -37,8 +37,8 @@ model User {
 
 model Post {
   id Int @id @default(autoincrement())
-  url String
-  public String
+  sourceURI String
+  thumnailURI String?
   title String?
   caption String?
   like Int @default(0)
