@@ -1,5 +1,26 @@
+# Dependencies
 node_modules
-# Keep environment variables out of version control
-.env
+
+# Build outputs
 dist
-./node_modules
+build
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Coverage / testing
+coverage/
+__tests__/
+
+# Editor / OS files
+.DS_Store
+.idea
+.vscode
+
+# Prisma local database
+prisma/dev.db

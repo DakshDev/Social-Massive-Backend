@@ -15,7 +15,7 @@ if (!_env.port) {
   console.log("🔴 env PORT Missing");
   process.exit(1);
 }
-const PORT = _env.port;
+const PORT = _env.port || 3000;
 
 app.use(
   cors({

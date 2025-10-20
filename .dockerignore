@@ -1,0 +1,42 @@
+# Node modules (local)
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Logs
+logs
+*.log
+*.log.*
+
+# Build output (agar tu TypeScript use karta hai)
+dist
+build
+.cache
+
+# OS / editor files
+.DS_Store
+*.swp
+*.swo
+*.tmp
+.idea
+.vscode
+
+# Git & Docker files
+.git
+.gitignore
+.dockerignore
+
+# Tests (agar production image me nahi chahiye)
+__tests__/
+coverage/
+
+# Prisma generated files (optional – agar tu npx prisma generate container me hi chalata hai)
+prisma/dev.db
