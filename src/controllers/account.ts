@@ -74,7 +74,7 @@ async function createAccount(req: Request, res: Response) {
       .cookie("token", token, {
         httpOnly: true,
         secure: _env.NODE_ENV === "production",
-        sameSite: "none",
+        sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(201)
@@ -115,7 +115,7 @@ async function loginAccount(req: Request, res: Response) {
       .cookie("token", token, {
         httpOnly: true,
         secure: _env.NODE_ENV === "production",
-        sameSite: "none",
+        sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(200)
