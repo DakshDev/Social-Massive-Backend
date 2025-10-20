@@ -4,9 +4,9 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "build": "npx tsc",
+    "build": "npx prisma generate && npx tsc",
     "start": "node ./dist/server.js",
-    "dev": "nodemon --watch src --ext ts --exec \"npx tsx src/server.ts\""
+    "dev": "npx prisma generate && nodemon --watch src --ext ts --exec \"npx tsx src/server.ts\""
   },
   "keywords": [],
   "author": "",
