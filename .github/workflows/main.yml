@@ -1,0 +1,48 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - main       # change to 'dev' if you want to deploy from dev branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 3️⃣ Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # 4️⃣ Build project (if build script exists)
+      - name: Build project
+        run: npm run build
+
+      # 5️⃣ Deploy to Render
+      - name: Deploy to Render
+        env:
+          # 🔒 Secrets (add these in GitHub → Settings → Secrets → Actions)
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+          # ⚙️ Normal runtime env vars
+          NODE_ENV: production
+          PORT: 3000
+
+        run: |
+          echo "🚀 Triggering deploy on Render..."
+          curl -X POST "https://api.render.com/v1/services/$SERVICE_ID/deploys" \
+          -H "Accept: application/json" \
+          -H "Authorization: Bearer $RENDER_API_KEY"
