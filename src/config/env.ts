@@ -6,6 +6,8 @@ const _env = Object.freeze({
   cloud_name: process.env.CLOUD_NAME as string,
   cloud_api_key: process.env.CLOUD_API_KEY as string,
   cloud_api_secret: process.env.CLOUD_SECRET_API_KEY as string,
+  // Allow Origin
+  cors_origin: process.env.ALLOW_ORIGIN as string,
 });
 
 export default _env;

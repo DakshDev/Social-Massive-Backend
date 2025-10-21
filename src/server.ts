@@ -11,15 +11,15 @@ import { userRoute } from "./routes/user.js";
 import { publicRoute } from "./routes/public.js";
 
 const app = express();
-if (!_env.port) {
-  console.log("🔴 env PORT Missing");
-  process.exit(1);
-}
 const PORT = _env.port || 3000;
 
+if (!_env.cors_origin) {
+  console.error("🔴 Allow CORS Origin ENV not defined");
+  process.exit(1);
+}
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: _env.cors_origin,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -33,4 +33,4 @@ app.use("/api/auth", accountRoute);
 app.use("/api/public", publicRoute);
 app.use("/api/user", authentication, userRoute);
 
-app.listen(PORT, () => console.log(`🟢 Server is running on PORT:${PORT}`));
+app.listen(PORT, () => console.log(`🟢 Running on ${_env.cors_origin}`));
