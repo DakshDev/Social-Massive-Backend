@@ -20,6 +20,7 @@ if (!_env.cors_origin) {
 app.use(
   cors({
     origin: _env.cors_origin,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   })
 );
