@@ -72,7 +72,7 @@ async function createAccount(req: Request, res: Response) {
     const filter_user = await filterUser(result);
     return res
       .cookie("token", token, {
-        secure: _env.NODE_ENV == "production",
+        secure: _env.NODE_ENV === "production",
         sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
@@ -112,7 +112,7 @@ async function loginAccount(req: Request, res: Response) {
 
     return res
       .cookie("token", token, {
-        secure: _env.NODE_ENV == "production",
+        secure: _env.NODE_ENV === "production",
         sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
@@ -128,10 +128,8 @@ async function loginAccount(req: Request, res: Response) {
 async function logoutAccount(req: Request, res: Response) {
   res
     .clearCookie("token", {
-      httpOnly: true,
       secure: _env.NODE_ENV === "production",
       sameSite: "none",
-      path: "/",
     })
     .json({ message: "Logout" });
 }
