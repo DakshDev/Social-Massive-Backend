@@ -8,7 +8,7 @@ import authentication from "./middlewares/authentication.js";
 // Routes
 import { accountRoute } from "./routes/account.js";
 import { userRoute } from "./routes/user.js";
-import { publicRoute } from "./routes/public.js";
+import { postRoute } from "./routes/post.js";
 
 const app = express();
 const PORT = _env.port || 3000;
@@ -29,7 +29,6 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/auth", accountRoute);
-app.use("/api/public", publicRoute);
+app.use("/api/post", authentication, postRoute);
 app.use("/api/user", authentication, userRoute);
-
-app.listen(PORT, () => console.log(`🟢 Running on ${_env.cors_origin}`));
+app.listen(PORT, () => console.log({ client: `🟢 ${_env.cors_origin}`, port: `🟢 ${PORT}` }));

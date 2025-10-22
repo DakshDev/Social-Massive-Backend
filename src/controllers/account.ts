@@ -68,7 +68,7 @@ async function createAccount(req: Request, res: Response) {
       return user;
     });
 
-    const token = jwt.sign({ username: result.username }, _env.jwtSecret);
+    const token = jwt.sign({ username: result.username }, _env.jwtSecret, { expiresIn: "7d" });
     const filter_user = await filterUser(result);
     return res
       .cookie("token", token, {
@@ -107,7 +107,7 @@ async function loginAccount(req: Request, res: Response) {
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) return res.status(400).json({ error: ErrorType.InvalidCredential });
 
-    const token = jwt.sign({ username: user.username }, _env.jwtSecret);
+    const token = jwt.sign({ username: user.username }, _env.jwtSecret, { expiresIn: "7d" });
     const filter_user = await filterUser(user);
 
     return res
@@ -124,14 +124,4 @@ async function loginAccount(req: Request, res: Response) {
   }
 }
 
-// Logout
-async function logoutAccount(req: Request, res: Response) {
-  res
-    .clearCookie("token", {
-      secure: _env.NODE_ENV === "production",
-      sameSite: "strict",
-    })
-    .json({ message: "Logout" });
-}
-
-export { createAccount, loginAccount, usernameChecker, logoutAccount };
+export { createAccount, loginAccount, usernameChecker };
