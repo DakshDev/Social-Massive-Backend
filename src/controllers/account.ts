@@ -75,7 +75,6 @@ async function createAccount(req: Request, res: Response) {
         httpOnly: true,
         secure: _env.NODE_ENV === "production",
         sameSite: "none",
-        path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(201)
@@ -117,7 +116,6 @@ async function loginAccount(req: Request, res: Response) {
         httpOnly: true,
         secure: _env.NODE_ENV === "production",
         sameSite: "none",
-        path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(200)

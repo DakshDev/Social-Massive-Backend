@@ -32,4 +32,4 @@ app.use(cookieParser());
 app.use("/api/auth", accountRoute);
 app.use("/api/public", publicRoute);
 app.use("/api/user", authentication, userRoute);
-app.listen(PORT, () => console.log({"Front End": `${_env.cors_origin}`, "PORT": `${_env.port}`}));
+app.listen(PORT, () => console.log({"Front End": `${_env.cors_origin}`, "PORT": `${PORT}`}));
