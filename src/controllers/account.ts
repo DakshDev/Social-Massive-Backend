@@ -73,6 +73,7 @@ async function createAccount(req: Request, res: Response) {
     return res
       .cookie("token", token, {
         secure: _env.NODE_ENV === "production",
+        domain: _env.sub_domain,
         sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
@@ -113,6 +114,7 @@ async function loginAccount(req: Request, res: Response) {
     return res
       .cookie("token", token, {
         secure: _env.NODE_ENV === "production",
+        domain: _env.sub_domain,
         sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
