@@ -7,6 +7,9 @@ import _env from "../config/env.js";
 import type { UserType } from "../types/user.js";
 import filterUser from "../utils/filter_user.js";
 
+// For This Page
+const ProdChecker = _env.NODE_ENV === "production";
+
 // Username Checker
 async function usernameChecker(req: Request, res: Response) {
   try {
@@ -72,9 +75,9 @@ async function createAccount(req: Request, res: Response) {
     const filter_user = await filterUser(result);
     return res
       .cookie("token", token, {
-        secure: _env.NODE_ENV === "production",
-        domain: _env.sub_domain,
-        sameSite: "none",
+        secure: ProdChecker,
+        domain: ProdChecker ? _env.sub_domain: undefined,
+        sameSite: ProdChecker ? "none" : 'strict',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(201)
@@ -113,9 +116,9 @@ async function loginAccount(req: Request, res: Response) {
 
     return res
       .cookie("token", token, {
-        secure: _env.NODE_ENV === "production",
-        domain: _env.sub_domain,
-        sameSite: "none",
+        secure: ProdChecker,
+        domain: ProdChecker ? _env.sub_domain: undefined,
+        sameSite: ProdChecker ? "none" : 'strict',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(200)

@@ -35,9 +35,5 @@ if (!_env.jwtSecret) {
   console.error("jwtSecret not defined");
   process.exit(1);
 }
-if (!_env.sub_domain) {
-  console.error("sub_domain not defined");
-  process.exit(1);
-}
 
 export default _env;

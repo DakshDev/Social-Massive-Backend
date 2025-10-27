@@ -7,7 +7,7 @@ async function authentication(req: Request, res: Response, next: NextFunction) {
   try {
     const { token } = req.cookies;
     // verify Token
-    if (!token) return res.status(401).send("Token Required");
+    if (!token) return res.status(401).send("Token Required"); 
     let tokenData;
     try {
       tokenData = jwt.verify(token, _env.jwtSecret) as { username: string };
