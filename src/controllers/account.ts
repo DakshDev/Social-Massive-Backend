@@ -7,8 +7,6 @@ import _env from "../config/env.js";
 import type { UserType } from "../types/user.js";
 import filterUser from "../utils/filter_user.js";
 
-// For This Page
-const ProdChecker = _env.NODE_ENV === "production";
 
 // Username Checker
 async function usernameChecker(req: Request, res: Response) {
@@ -75,9 +73,9 @@ async function createAccount(req: Request, res: Response) {
     const filter_user = await filterUser(result);
     return res
       .cookie("token", token, {
-        secure: ProdChecker,
-        domain: ProdChecker ? _env.sub_domain: undefined,
-        sameSite: ProdChecker ? "none" : 'strict',
+        secure: _env.NODE_ENV === "production",
+        domain: _env.sub_domain ? _env.sub_domain: undefined,
+        sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(201)
@@ -105,20 +103,20 @@ async function loginAccount(req: Request, res: Response) {
 
     // Find Use
     const user = await db.user.findUnique({ where: { email: email.toLowerCase() } });
-    if (!user) return res.status(404).json({ error: ErrorType.UserNotFound });
+    if (!user) return res.status(404).json({ error: "Invalid Email" });
 
     // Verify password
     const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) return res.status(400).json({ error: ErrorType.InvalidCredential });
+    if (!isValid) return res.status(400).json({ error: "Invalid Credential" });
 
     const token = jwt.sign({ username: user.username }, _env.jwtSecret, { expiresIn: "7d" });
     const filter_user = await filterUser(user);
 
     return res
       .cookie("token", token, {
-        secure: ProdChecker,
-        domain: ProdChecker ? _env.sub_domain: undefined,
-        sameSite: ProdChecker ? "none" : 'strict',
+        secure: _env.NODE_ENV === "production",
+        domain: _env.sub_domain ? _env.sub_domain: undefined,
+        sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(200)

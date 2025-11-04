@@ -32,4 +32,4 @@ app.use(cookieParser());
 app.use("/api/auth", accountRoute);
 app.use("/api/post", authentication, postRoute);
 app.use("/api/user", authentication, userRoute);
-app.listen(PORT, () => console.log({ client: `🟢 ${_env.cors_origin}`, port: `🟢 ${PORT}` }));
+app.listen(PORT, () => console.log({ allowOrigin: `🟢 ${_env.cors_origin}`, backendPORT: `🟢 ${PORT}` }));
